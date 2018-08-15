@@ -1,26 +1,37 @@
 startup_message off
-escape s-space
+escape Super_L
 
-alias nmcli exec nmcli_dmenu
 
-bind t exec urxvt
+bind t exec st
 bind c kill
-bind f exec google-chrome-stable
+bind f exec firefox
 bind r exec
 bind semicolon colon
 bind h hsplit
 bind v vsplit
 bind e shrink
 bind F exec xfe
-bind b exec ~/ratpoison/bat.sh
 
-bind s-1 exec rpws 1
-bind s-2 exec rpws 2
-bind s-3 exec rpws 3
+gnewbg internet
+gnewbg books
+gnewbg work
+gnewbg admin
+
+bind I gselect internet
+bind B gselect books
+bind W gselect work
+bind A gselect admin
+
+bind s-1 gselect internet
+bind s-2 gselect books
+bind s-3 gselect work
+bind s-4 gselect admin
+
+alias reader exec evince
 
 set bargravity se
 
 exec rpws init 3 -k 
-exec feh --bg-fill Pictures/the_melancholy_of_haruhi_suzum_2560x1600_animemay.com.jpg
-exec compton & 
-#exec xbacklight -dec 40
+
+exec xinput disable 9
+exec feh --bg-scale ~/Pictures/wallup-20158.jpg
