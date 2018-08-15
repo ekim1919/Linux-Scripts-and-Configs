@@ -17,10 +17,10 @@ gnewbg books
 gnewbg work
 gnewbg admin
 
-bind I gselect internet
-bind B gselect books
-bind W gselect work
-bind A gselect admin
+bind i gmove internet
+bind b gmove books
+bind w gmove work
+bind a gmove admin
 
 bind s-1 gselect internet
 bind s-2 gselect books
@@ -28,10 +28,9 @@ bind s-3 gselect work
 bind s-4 gselect admin
 
 alias reader exec evince
+alias sound exec pavucontrol
 
 set bargravity se
 
-exec rpws init 3 -k 
-
 exec xinput disable 9
-exec feh --bg-scale ~/Pictures/wallup-20158.jpg
+exec feh --bg-scale ~/Pictures/wall2.jpg
