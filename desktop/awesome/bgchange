@@ -1,0 +1,180 @@
+#! /bin/bash 
+
+# A script for changing the background for the awesome windows manager. 
+# Made specifically for users with multiple monitors. Made for users who want different wallpapers for each monitor. 
+# Screen number to which the picture will be pasted 
+# Requires the gear libraries/module for the awesome wm.
+
+##########################################################
+# WARNING!!!!!
+# This script alters the rc.lua script you are using.
+# Although a backup of the original script will be kept. 
+# Any changes you make to the original rc.lua file must be updated to the template this script will be using. 
+###########################################################
+
+##########################################################################################################################
+# Functions needed for bgchange 
+# Functions internet and local either download or copy an image into $directory and set the $file variable with the image name.  
+###########################################################################################################################
+
+function internet() {
+
+	url=$1
+	file=`basename $url 2>/dev/null`
+
+	echo "Attempting to download image"
+        wget --spider $url 2>/dev/null #check validity of URL
+
+	# Checks if picture exists and/or URL is valid 
+
+	if [ $? -ne 0 ] ; then
+
+        	echo "Invalid URL. Download was not successful"
+        	exit
+	else
+
+		wget -P $directory -N $url 2>/dev/null
+        	echo "Download successful"
+	fi
+
+}
+
+# Copy picture over to wallpaper folder
+
+function localdrive() {
+
+	path=$1
+
+	file=`basename $path 2>/dev/null` 
+
+        if [ ! -e $path ] ; then
+                echo "File does not exist on drive"
+                exit
+        fi
+
+	cp $path $directory 2>/dev/null 
+}
+
+###################################
+# Functions for backup and restore. 
+###################################
+
+function backup() {
+	
+	name=$1
+	cp $rcscriptloc/rc.lua $directory/Backup/$name
+	echo "Backup successful named" $name
+	exit
+}
+
+function restore() {
+	
+	name=$1
+	cp $directory/Backup/$name $rcscriptloc/rc.lua
+	if [ $? -ne "0" ] ; then
+		echo "Restore Failed. Does the file exist?"
+		exit
+	else
+		echo "Restore successful"
+	fi
+	echo 'awesome.restart()' | awesome-client 2>/dev/null
+	exit
+	
+}
+
+function destroy() {
+
+	echo "Warning: this will remove the template the script uses in" $directory"/OriginalScript"
+        echo "Are you sure you want to remove this template?"
+        read -a answer
+
+        if [ $answer = "yes" ] ; then 
+        	rm $directory/OriginalScript/rc.lua
+                echo "Removed rc.lua in $directory/OriginalScript" 
+        fi
+        exit 
+}          
+
+########################################################
+# Global Variables. Values can be changed to directory user specifies
+########################################################
+
+directory=$HOME/awesomestuff/Temp #Directory where wallpaper and configurations are stored.
+rcscriptloc=$HOME/awesome #location of the rc.lua script awesome will use.
+Screendir=$HOME/awesomestuff/Screens #location where the lua statements to change the wallpapers for each screen will be stored. 
+
+#start of script 
+
+if [ $# -eq "0" ] ; then 
+
+	echo "You need at least an option and an arugment (Format: bgchange OPTION ARGUMENT:URL/PATH SCREEN WALLPAPERSETTING)"
+        exit
+fi
+
+if [ ! -e $directory/OriginalScript/rc.lua ] ; then 
+
+	echo "No previous rc.lua script detected or lua script is changed. using the one in"  $rcscriptloc
+
+        if [ ! -d $directory/OriginalScript ] ; then
+            echo "No OriginalScript directory detected. Creating a directory to store original rc.lua"
+            mkdir $directory/OriginalScript
+        fi
+    
+        cp $rcscriptloc/rc.lua $directory/OriginalScript/ 
+fi 
+
+case $1 in 
+	-l) localdrive $2
+	;;
+	-i) internet $2
+	;;
+	-b) backup $2
+	;;
+	-r) restore $2
+	;;
+        -d) destroy $2
+        ;;
+	*) echo "Not a valid option"
+           echo "Use -l to specify a path from your local drive. -i to specify a url from the internet. -b to backup your current wallpaper config. -r to restore your previous 
+config"
+	exit
+	;;
+esac 
+
+if [ $# -eq "2" ] ; then
+   
+	echo "Default: using screen 1 (main)"
+	screennum=1
+else
+	echo "Using screen:" $3
+	screennum=$3
+fi
+
+case "$4" in 
+	maximized) echo "gears.wallpaper.maximized(\"$directory/$file\" , $screennum, true)" > $Screendir/$screennum 
+	;;
+	centered) echo "gears.wallpaper.centered(\"$directory/$file\" , $screennum, true)" > $Screendir/$screennum
+	;;
+	*) echo "Using maximized default setting" 
+	   echo "gears.wallpaper.maximized(\"$directory/$file\" , $screennum, true)" > $Screendir/$screennum
+	;;
+esac
+
+##################################
+# Copy original script as template 
+##################################
+
+cp $directory/OriginalScript/rc.lua $rcscriptloc 
+
+###############################################################
+#Adds all the wallpaper gear statements to rc.lua in $rcsciptloc 
+##############################################################
+
+for screen in $Screendir/*  
+do
+	cat $screen >> $rcscriptloc/rc.lua
+done 
+
+echo "Restarting the awesome wm to apply changes" 
+echo 'awesome.restart()' | awesome-client 2>/dev/null #restart awesome 
+
